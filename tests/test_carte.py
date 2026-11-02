@@ -61,7 +61,8 @@ def test_creer_carte_avec_et_sans_reseau() -> None:
 
 def test_creer_carte_infobulle_des_liaisons() -> None:
     carte = creer_carte(liaisons_exemple(), "Retard")
-    infos = [liaison["info"] for liaison in carte.layers[0].data]
+    premiere = carte.layers[0].data[0]
     # La liaison la plus fréquentée est dessinée en premier (sous les autres)
-    assert infos[0].startswith("<b>LYON PART DIEU ↔ PARIS LYON</b>")
-    assert "Retard : 12.0" in infos[0]
+    assert premiere["titre"] == "LYON PART DIEU ↔ PARIS LYON"
+    # Pas de HTML dans les données : Streamlit l'afficherait tel quel
+    assert premiere["detail"] == "Retard : 12.0\n1000 circulations prévues"

@@ -69,12 +69,10 @@ def creer_carte(
     liaisons = liaisons.assign(
         couleur=couleurs(liaisons["valeur"], bas, haut),
         largeur=2 + 6 * np.sqrt(liaisons["prevus"] / liaisons["prevus"].max()),
-        info=[
-            f"<b>{a} ↔ {b}</b><br/>{nom_indicateur} : {v:.1f}<br/>"
-            f"{int(p)} circulations prévues"
-            for a, b, v, p in liaisons[
-                ["gare_a", "gare_b", "valeur", "prevus"]
-            ].itertuples(index=False)
+        titre=liaisons["gare_a"] + " ↔ " + liaisons["gare_b"],
+        detail=[
+            f"{nom_indicateur} : {v:.1f}\n{int(p)} circulations prévues"
+            for v, p in zip(liaisons["valeur"], liaisons["prevus"])
         ],
     )
     # Les liaisons partagent souvent les mêmes voies :
@@ -85,7 +83,8 @@ def creer_carte(
     gares = pd.DataFrame(
         {
             "position": [GARES[g][::-1] for g in noms],
-            "info": [f"<b>{g}</b>" for g in noms],
+            "titre": noms,
+            "detail": "Gare",
         }
     )
 
@@ -137,5 +136,10 @@ def creer_carte(
         initial_view_state=pdk.ViewState(latitude=46.6, longitude=2.5, zoom=5),
         map_provider="carto",
         map_style=pdk.map_styles.CARTO_LIGHT,
-        tooltip={"html": "{info}", "style": {"fontSize": "12px"}},
+        # Streamlit échappe le HTML contenu dans les données : la mise en forme
+        # reste dans le modèle, et les retours à la ligne passent par pre-line
+        tooltip={
+            "html": "<b>{titre}</b><br/>{detail}",
+            "style": {"fontSize": "12px", "whiteSpace": "pre-line"},
+        },
     )
