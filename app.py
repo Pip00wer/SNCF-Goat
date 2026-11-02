@@ -53,7 +53,10 @@ def taux_retard_15(regularite: pd.DataFrame) -> pd.DataFrame:
 
 
 st.set_page_config(page_title="Carte des TGV", page_icon="🚄", layout="wide")
-st.title("🚄 Régularité des liaisons TGV")
+st.title(
+    "Peut-on construire un score de fiabilité par liaison, combinant taux "
+    "d’annulation et retard moyen, et le représenter sur une carte du réseau ?"
+)
 
 regularite = charger_regularite()
 mois = sorted(regularite["mois"].unique())
