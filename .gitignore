@@ -1,2 +1,6 @@
 /venv/
+.venv/
 *.ipynb
+__pycache__/
+.coverage
+.DS_Store
