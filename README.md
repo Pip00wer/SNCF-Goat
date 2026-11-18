@@ -35,10 +35,10 @@ Il est également possible de lancer l'application directement avec Docker.
 
 ```bash
 # Récupérer l'image
-docker pull <DOCKERHUB_USERNAME>/sncf-project:latest
+docker pull pip00wer/sncf-project:latest
 
 # Lancer le conteneur
-docker run -p 8501:8501 <DOCKERHUB_USERNAME>/sncf-project:latest
+docker run -p 8501:8501 pip00wer/sncf-project:latest
 ```
 
 L'application sera accessible sur http://localhost:8501.
