@@ -16,7 +16,9 @@ agg_df, ligne_dict = aggregate_by_ligne(df, start_date=start_date, end_date=end_
 print(agg_df.shape)
 print(len(ligne_dict))
 
-scores_df = all_scores_and_sort(agg_df, poids_gravité, sort_by="score_3")
+scores_df = all_scores_and_sort(
+    agg_df, poids_gravité, sort_by="score_3", debut=start_date, fin=end_date,
+)
 
 
 print(scores_df.head())

@@ -1,6 +1,6 @@
 """Carte des liaisons TGV sur le réseau ferré.
 
-Lancer avec : uv run streamlit run app.py
+Lancer avec : uv run streamlit run app_test.py
 """
 
 from pathlib import Path
@@ -81,7 +81,7 @@ def calculer_liaisons_scorees(
     choix_score: str,
 ) -> pd.DataFrame:
     """Agrège sur la période choisie, calcule les scores et formate pour la carte."""
-    # 1. Agrégation (aller_retour=True pour matcher la carte)
+    # 1. Fusion des deux sens sur toute la période avec les moyennes pondérées existantes.
     agg_df, lignes_dict = aggregate_by_ligne(
         df,
         start_date=debut,
@@ -89,8 +89,14 @@ def calculer_liaisons_scorees(
         aller_retour=True,
     )
 
-    # 2. Scoring
-    scores_df = all_scores_and_sort(agg_df, poids_gravité, sort_by=choix_score)
+    # 2. Les scores 4 et 5 utilisent directement les moyennes de toute la période.
+    # Les dates permettent au score 4 de calculer le temps exploitable de cette période.
+    scores_df = all_scores_and_sort(
+        agg_df, poids_gravité, sort_by=choix_score,
+        debut=debut, fin=fin,
+    )
+    # Une absence de données comparables reste manquante, jamais un score artificiel.
+    scores_df = scores_df.dropna(subset=[choix_score])
 
     # 3. Récupération de gare_a et gare_b via numero_ligne et lignes_dict
     numeros = (
@@ -110,6 +116,7 @@ def calculer_liaisons_scorees(
     scores_df["gare_b"] = gares_triees.max(axis=1)
 
     # 4. Filtre sur la gare sélectionnée dans la sidebar
+    # Le faire après le scoring garde tout le réseau comme référence pour le score 5.
     if gare != "Toutes les gares":
         scores_df = scores_df[
             (scores_df["gare_a"] == gare) | (scores_df["gare_b"] == gare)
@@ -147,12 +154,14 @@ with st.sidebar:
     gare = st.selectbox("Gare", ["Toutes les gares", *toutes_gares])
     choix_score = st.selectbox(
         "Méthode de scoring",
-        options=["score_1", "score_2", "score_3"],
+        options=["score_1", "score_2", "score_3", "score_4", "score_5"],
         index=2,
         format_func=lambda s: {
             "score_1": "Score 1 – Taux de réussite",
             "score_2": "Score 2 – Gravité des retards",
             "score_3": "Score 3 – Relatif au temps de trajet",
+            "score_4": "Score 4 – Minutes de perturbation",
+            "score_5": "Score 5 – Note relative au P75 réseau",
         }[s],
     )
     afficher_reseau = st.checkbox("Afficher le réseau ferré", value=True)
@@ -161,7 +170,7 @@ liaisons = calculer_liaisons_scorees(df_clean, debut, fin, gare, choix_score)
 
 
 if liaisons.empty:
-    st.info("Aucune circulation pour cette gare sur la période choisie.")
+    st.info("Aucune liaison avec un score calculable pour cette gare sur la période choisie.")
     st.stop()
 
 liaisons["itineraire"] = [
@@ -172,13 +181,24 @@ noms_indicateurs = {
     "score_1": "Score de fiabilité – Taux de réussite (/100)",
     "score_2": "Score de fiabilité – Gravité des retards (/100)",
     "score_3": "Score de fiabilité – Relatif au temps de trajet (/100)",
+    "score_4": "Perturbation moyenne par train prévu (min)",
+    "score_5": "Score de fiabilité – Relatif au P90 réseau sur la période (/100)",
 }
 nom_indicateur = noms_indicateurs[choix_score]
 
 reseau = charger_reseau().traces if afficher_reseau else None
-st.pydeck_chart(creer_carte(liaisons, nom_indicateur, reseau), height=650)
+# Seul le score 4 est meilleur quand il diminue ; les infobulles restent en minutes.
+faibles_favorables = choix_score == "score_4"
+st.pydeck_chart(
+    creer_carte(liaisons, nom_indicateur, reseau, valeurs_faibles_favorables=faibles_favorables),
+    height=650,
+)
+bas, haut = bornes(liaisons["valeur"])
+unite = " min" if faibles_favorables else " pts"
+# La légende va du vert au rouge : inverser aussi ses bornes pour les notes élevées favorables.
+borne_verte, borne_rouge = (bas, haut) if faibles_favorables else (haut, bas)
 st.markdown(
-    f"**{nom_indicateur}** {legende(*bornes(liaisons['valeur']), ' pts')}",
+    f"**{nom_indicateur}** {legende(borne_verte, borne_rouge, unite)}",
     unsafe_allow_html=True,
 )
 st.caption(
