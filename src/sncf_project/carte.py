@@ -55,6 +55,7 @@ def creer_carte(
     liaisons: pd.DataFrame,
     nom_indicateur: str,
     reseau: list[np.ndarray] | None = None,
+    valeurs_faibles_favorables: bool = False,
 ) -> pdk.Deck:
     """Construit la carte des liaisons.
 
@@ -63,11 +64,18 @@ def creer_carte(
         (l'indicateur à colorer) et ``prevus`` (nombre de circulations).
     :param nom_indicateur: nom de l'indicateur, affiché au survol.
     :param reseau: tracés du réseau ferré à afficher en fond (optionnel).
+    :param valeurs_faibles_favorables: colore les faibles perturbations en vert.
     :return: la carte, à afficher avec ``st.pydeck_chart``.
     """
     bas, haut = bornes(liaisons["valeur"])
+    # Le score en minutes garde sa valeur réelle, seul le sens des couleurs change.
+    couleurs_liaisons = (
+        couleurs(-liaisons["valeur"], -haut, -bas)
+        if valeurs_faibles_favorables
+        else couleurs(liaisons["valeur"], bas, haut)
+    )
     liaisons = liaisons.assign(
-        couleur=couleurs(liaisons["valeur"], bas, haut),
+        couleur=couleurs_liaisons,
         largeur=2 + 6 * np.sqrt(liaisons["prevus"] / liaisons["prevus"].max()),
         titre=liaisons["gare_a"] + " ↔ " + liaisons["gare_b"],
         detail=[

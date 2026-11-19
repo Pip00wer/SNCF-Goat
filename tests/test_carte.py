@@ -66,3 +66,13 @@ def test_creer_carte_infobulle_des_liaisons() -> None:
     assert premiere["titre"] == "LYON PART DIEU ↔ PARIS LYON"
     # Pas de HTML dans les données : Streamlit l'afficherait tel quel
     assert premiere["detail"] == "Retard : 12.0\n1000 circulations prévues"
+
+
+def test_carte_minutes_faibles_en_vert_sans_modifier_infobulle() -> None:
+    carte = creer_carte(
+        liaisons_exemple(), "Perturbation (min)", valeurs_faibles_favorables=True,
+    )
+    faible, forte = carte.layers[0].data
+    assert faible["couleur"][:3] == VERT
+    assert forte["couleur"][:3] == ROUGE
+    assert faible["detail"] == "Perturbation (min) : 12.0\n1000 circulations prévues"
