@@ -28,7 +28,7 @@ def couleurs(valeurs: pd.Series, bas: float, haut: float) -> list[list[int]]:
     :param haut: valeur affichée en rouge (et au-dessus).
     :return: une couleur ``[r, g, b, a]`` par valeur.
     """
-    t = np.clip((valeurs.to_numpy(dtype=float) - bas) / max(haut - bas, 1e-9), 0, 1)
+    t = 1- np.clip((valeurs.to_numpy(dtype=float) - bas) / max(haut - bas, 1e-9), 0, 1)
     rgb = np.column_stack([np.interp(t, [0, 0.5, 1], ECHELLE[:, k]) for k in range(3)])
     return [[*map(int, c), 230] for c in rgb]
 
