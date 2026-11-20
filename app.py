@@ -100,7 +100,16 @@ def calculer_liaisons_scorees(
             | scores_df["gare_b"].isin(gares_choisies)
         ]
 
-    # 5. Renommage pour correspondre exactement à ce qu'attend creer_carte()
+
+    # 5. Rang calculé sur le périmètre affiché (toutes liaisons ou gares choisies)
+    # Comme scores_df est déjà trié par all_scores_and_sort, l'ordre correspond au rang.
+    nb_liaisons = len(scores_df)
+    scores_df = scores_df.assign(
+        rang_num=range(1, nb_liaisons + 1),
+        rang=[f"{i}/{nb_liaisons}" for i in range(1, nb_liaisons + 1)],
+    )
+
+    # 6. Renommage pour correspondre exactement à ce qu'attend creer_carte()
     scores_df = scores_df.rename(
         columns={
             choix_score: "valeur",
@@ -188,4 +197,39 @@ st.caption(
     "Les itinéraires sont reconstitués (trajet le plus rapide sur le réseau, "
     "en privilégiant les LGV), ce ne sont pas les sillons réels. "
     "Sources : SNCF Réseau (formes des lignes du RFN), AQST (régularité mensuelle TGV)."
+)
+
+# AJOUT D'UN TABLEAU POUR LE RANKING 
+
+
+st.subheader("Classement des liaisons")
+
+tableau_classement = liaisons[
+    ["rang", "gare_a", "gare_b", "valeur", "prevus"]
+].rename(
+    columns={
+        "rang": "Rang",
+        "gare_a": "Gare A",
+        "gare_b": "Gare B",
+        "valeur": nom_indicateur,
+        "prevus": "Trains prévus",
+    }
+)
+
+st.dataframe(
+    tableau_classement,
+    use_container_width=True,
+    hide_index=True,
+    height=320,
+    column_config={
+        "Rang": st.column_config.TextColumn("Rang", width="small"),
+        nom_indicateur: st.column_config.NumberColumn(
+            nom_indicateur,
+            format="%.2f" + (" min" if faibles_favorables else " pts"),
+        ),
+        "Trains prévus": st.column_config.NumberColumn(
+            "Trains prévus",
+            format="%d",
+        ),
+    },
 )
