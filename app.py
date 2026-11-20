@@ -51,7 +51,7 @@ def calculer_liaisons_scorees(
     df: pd.DataFrame,
     debut: pd.Timestamp,
     fin: pd.Timestamp,
-    gare: str,
+    gares_choisies: list[str],
     choix_score: str,
 ) -> pd.DataFrame:
     """Agrège sur la période choisie, calcule les scores et formate pour la carte."""
@@ -92,11 +92,12 @@ def calculer_liaisons_scorees(
     scores_df["gare_a"] = gares_triees.min(axis=1)
     scores_df["gare_b"] = gares_triees.max(axis=1)
 
-    # 4. Filtre sur la gare sélectionnée dans la sidebar
+    # 4. Filtre sur les gares sélectionnées dans la sidebar (aucune = toutes)
     # Le faire après le scoring garde tout le réseau comme référence pour le score 5.
-    if gare != "Toutes les gares":
+    if gares_choisies:
         scores_df = scores_df[
-            (scores_df["gare_a"] == gare) | (scores_df["gare_b"] == gare)
+            scores_df["gare_a"].isin(gares_choisies)
+            | scores_df["gare_b"].isin(gares_choisies)
         ]
 
     # 5. Renommage pour correspondre exactement à ce qu'attend creer_carte()
@@ -127,7 +128,9 @@ with st.sidebar:
         format_func=lambda m: pd.Timestamp(m).strftime("%m/%Y"),
     )
 
-    gare = st.selectbox("Gare", ["Toutes les gares", *toutes_gares])
+    gares_choisies = st.multiselect(
+        "Gares", toutes_gares, placeholder="Toutes les gares"
+    )
     choix_score = st.selectbox(
         "Méthode de scoring",
         options=["score_1", "score_2", "score_3", "score_4", "score_5"],
@@ -142,12 +145,12 @@ with st.sidebar:
     )
     afficher_reseau = st.checkbox("Afficher le réseau ferré", value=True)
 
-liaisons = calculer_liaisons_scorees(df_clean, debut, fin, gare, choix_score)
+liaisons = calculer_liaisons_scorees(df_clean, debut, fin, gares_choisies, choix_score)
 
 
 if liaisons.empty:
     st.info(
-        "Aucune liaison avec un score calculable pour cette gare sur la période choisie."
+        "Aucune liaison avec un score calculable pour ces gares sur la période choisie."
     )
     st.stop()
 
