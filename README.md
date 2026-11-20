@@ -31,7 +31,7 @@ L'application sera accessible sur http://localhost:8501.
 
 ### Comparer les cinq scores
 
-Lancer la carte expérimentale avec `uv run streamlit run app_test.py`.
+Les cinq scores sont disponibles dans l'application principale, lancée avec `uv run streamlit run app.py`.
 Les deux scores supplémentaires sont calculés sur la période sélectionnée :
 
 - **score_4** : minutes équivalentes de perturbation par train prévu

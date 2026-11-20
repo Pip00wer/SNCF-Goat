@@ -137,7 +137,7 @@ with st.sidebar:
             "score_2": "Score 2 – Gravité des retards",
             "score_3": "Score 3 – Relatif au temps de trajet",
             "score_4": "Score 4 – Minutes de perturbation",
-            "score_5": "Score 5 – Note relative au P75 réseau",
+            "score_5": "Score 5 – Note relative au P90 réseau",
         }[s],
     )
     afficher_reseau = st.checkbox("Afficher le réseau ferré", value=True)
