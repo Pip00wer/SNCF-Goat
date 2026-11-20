@@ -18,7 +18,7 @@ git clone https://github.com/Pip00wer/SNCF-Goat.git
 cd SNCF-Goat
 
 # Créer l'environnement virtuel
-uv venv
+uv venv --python 3.13
 
 # Installer les dépendances
 uv sync
