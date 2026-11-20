@@ -74,13 +74,22 @@ def creer_carte(
         if valeurs_faibles_favorables
         else couleurs(liaisons["valeur"], bas, haut)
     )
+    rangs = (
+        liaisons["rang"]
+        if "rang" in liaisons.columns
+        else [None] * len(liaisons)
+    )
     liaisons = liaisons.assign(
         couleur=couleurs_liaisons,
         largeur=2 + 6 * np.sqrt(liaisons["prevus"] / liaisons["prevus"].max()),
         titre=liaisons["gare_a"] + " ↔ " + liaisons["gare_b"],
         detail=[
-            f"Rang : {r}\n{nom_indicateur} : {v:.1f}\n{int(p)} circulations prévues"
-            for r, v, p in zip(liaisons["rang"], liaisons["valeur"], liaisons["prevus"])
+            (
+                f"Rang : {r}\n{nom_indicateur} : {v:.1f}\n{int(p)} circulations prévues"
+                if r is not None
+                else f"{nom_indicateur} : {v:.1f}\n{int(p)} circulations prévues"
+            )
+            for r, v, p in zip(rangs, liaisons["valeur"], liaisons["prevus"])
         ],
     )
     # Les liaisons partagent souvent les mêmes voies :
