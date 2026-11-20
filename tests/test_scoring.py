@@ -5,8 +5,12 @@ import pytest
 
 from sncf_project.aggregation import aggregate_by_ligne
 from sncf_project.config import poids_gravité
-from sncf_project.scoring import _penalite_relative, all_scores_and_sort, score_4, score_5
-
+from sncf_project.scoring import (
+    _penalite_relative,
+    all_scores_and_sort,
+    score_4,
+    score_5,
+)
 
 DEBUT = pd.Timestamp("2024-01-01")
 FIN = pd.Timestamp("2024-02-01")
@@ -23,8 +27,13 @@ def observations() -> pd.DataFrame:
             ("D", "C", "2024-02", 100, 100, None, 100),
         ],
         columns=[
-            "départ", "arrivée", "date", "nb_prevues", "nb_annules",
-            "retard_moy_arr", "moy_trajet (min)",
+            "départ",
+            "arrivée",
+            "date",
+            "nb_prevues",
+            "nb_annules",
+            "retard_moy_arr",
+            "moy_trajet (min)",
         ],
     )
     df["date"] = pd.to_datetime(df["date"])
@@ -40,10 +49,16 @@ def observations() -> pd.DataFrame:
     return df
 
 
-def test_scores_4_et_5_utilisent_les_moyennes_de_la_periode(observations: pd.DataFrame) -> None:
+def test_scores_4_et_5_utilisent_les_moyennes_de_la_periode(
+    observations: pd.DataFrame,
+) -> None:
     agrege, _ = aggregate_by_ligne(observations, aller_retour=True)
     scores = all_scores_and_sort(
-        agrege.copy(), poids_gravité, sort_by="score_4", debut=DEBUT, fin=FIN,
+        agrege.copy(),
+        poids_gravité,
+        sort_by="score_4",
+        debut=DEBUT,
+        fin=FIN,
     )
     assert scores["numero_ligne"].tolist() == [1, 2]
     scores = scores.set_index("numero_ligne")
@@ -64,18 +79,26 @@ def test_scores_4_et_5_utilisent_les_moyennes_de_la_periode(observations: pd.Dat
     )
 
 
-def test_periode_selectionnee_et_moyennes_existantes(observations: pd.DataFrame) -> None:
+def test_periode_selectionnee_et_moyennes_existantes(
+    observations: pd.DataFrame,
+) -> None:
     debut = fin = pd.Timestamp("2024-02-01")
     agrege, _ = aggregate_by_ligne(observations, debut, fin, aller_retour=True)
     scores = all_scores_and_sort(
-        agrege, poids_gravité, sort_by="score_5", debut=debut, fin=fin,
+        agrege,
+        poids_gravité,
+        sort_by="score_5",
+        debut=debut,
+        fin=fin,
     )
     ab = scores.loc[scores["gare_a"].eq("A")].iloc[0]
     assert ab["score_4"] == 0.25
     assert ab["score_5"] == pytest.approx(30)
 
 
-def test_aucun_train_en_retard_ne_penalise_pas_la_note(observations: pd.DataFrame) -> None:
+def test_aucun_train_en_retard_ne_penalise_pas_la_note(
+    observations: pd.DataFrame,
+) -> None:
     observations["nb_annules"] = 0
     observations["nb_trajets"] = observations["nb_prevues"]
     observations["nb_retard_arr"] = 0
@@ -84,7 +107,11 @@ def test_aucun_train_en_retard_ne_penalise_pas_la_note(observations: pd.DataFram
     agrege, _ = aggregate_by_ligne(observations, aller_retour=True)
     assert agrege["moy_retard"].isna().all()
     scores = all_scores_and_sort(
-        agrege, poids_gravité, sort_by="score_5", debut=DEBUT, fin=FIN,
+        agrege,
+        poids_gravité,
+        sort_by="score_5",
+        debut=DEBUT,
+        fin=FIN,
     )
     assert scores["score_4"].eq(0).all()
     assert scores["score_5"].eq(100).all()
@@ -110,10 +137,15 @@ def test_penalite_p90_nul_negatif_ou_manquant() -> None:
     ],
 )
 def test_score_4_compte_les_jours_des_mois_inclus(debut, fin, jours) -> None:
-    df = pd.DataFrame({
-        "nb_prevues": [10_000], "nb_annules": [1_000], "nb_trajets": [9_000],
-        "moy_durée": [100.0], "retard_moy_all": [2.0],
-    })
+    df = pd.DataFrame(
+        {
+            "nb_prevues": [10_000],
+            "nb_annules": [1_000],
+            "nb_trajets": [9_000],
+            "moy_durée": [100.0],
+            "retard_moy_all": [2.0],
+        }
+    )
     resultat = score_4(df, pd.Timestamp(debut), pd.Timestamp(fin))
     assert resultat.loc[0, "score_4"] == pytest.approx(
         (18_000 + 1_000 * (jours * 900 / 10_000 + 10)) / 10_000
@@ -121,10 +153,15 @@ def test_score_4_compte_les_jours_des_mois_inclus(debut, fin, jours) -> None:
 
 
 def test_score_4_reste_stable_quand_la_periode_et_le_trafic_doublent() -> None:
-    df = pd.DataFrame({
-        "nb_prevues": [1_000], "nb_annules": [100], "nb_trajets": [900],
-        "moy_durée": [100.0], "retard_moy_all": [2.0],
-    })
+    df = pd.DataFrame(
+        {
+            "nb_prevues": [1_000],
+            "nb_annules": [100],
+            "nb_trajets": [900],
+            "moy_durée": [100.0],
+            "retard_moy_all": [2.0],
+        }
+    )
     double = df.copy()
     double[["nb_prevues", "nb_annules", "nb_trajets"]] *= 2
     simple = score_4(df, pd.Timestamp("2024-07-01"), pd.Timestamp("2024-07-01"))
@@ -133,13 +170,16 @@ def test_score_4_reste_stable_quand_la_periode_et_le_trafic_doublent() -> None:
 
 
 def test_score_5_tient_compte_de_la_frequence_des_retards() -> None:
-    df = pd.DataFrame({
-        "nb_prevues": [100, 100], "nb_annules": [0, 0], "nb_trajets": [100, 100],
-        "nb_retard_arr": [1, 50], "moy_retard": [30.0, 30.0],
-        "retard_moy_all": [0.3, 15.0],
-    })
+    df = pd.DataFrame(
+        {
+            "nb_prevues": [100, 100],
+            "nb_annules": [0, 0],
+            "nb_trajets": [100, 100],
+            "nb_retard_arr": [1, 50],
+            "moy_retard": [30.0, 30.0],
+            "retard_moy_all": [0.3, 15.0],
+        }
+    )
     resultat = score_5(df)
     assert resultat.loc[0, "score_5"] == pytest.approx(100 * (1 - 0.7 * 0.3 / 13.53))
     assert resultat.loc[1, "score_5"] == pytest.approx(30)
-
-
