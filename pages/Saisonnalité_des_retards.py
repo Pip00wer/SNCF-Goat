@@ -45,7 +45,16 @@ def unite(score):
     return "min" if score in SCORES_DECROISSANTS else "pts"
 
 
-st.set_page_config(page_title="Saisonnalité des TGV", page_icon="📅", layout="wide")
+st.set_page_config(page_title="Saisonnalité des TGV", layout="wide")
+
+with st.sidebar:
+    st.page_link("app.py", label="Carte de fiabilité")
+    st.page_link(
+        "pages/Saisonnalité_des_retards.py",
+        label="Saisonnalité des retards",
+    )
+    st.divider()
+
 st.title("Quels mois de l'année les TGV sont-ils le moins fiables ?")
 scores = charger_scores()
 

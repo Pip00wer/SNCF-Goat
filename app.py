@@ -124,6 +124,14 @@ st.title(
     "Affichage de différents scores de fiabilité par liason sur une carte réseau"
 )
 
+with st.sidebar:
+    st.page_link("app.py", label="Carte de fiabilité")
+    st.page_link(
+        "pages/Saisonnalité_des_retards.py",
+        label="Saisonnalité des retards",
+    )
+    st.divider()
+
 df_clean = charger_donnees_propres()
 mois = sorted(df_clean["mois"].unique())
 toutes_gares = sorted(set(df_clean["départ"]) | set(df_clean["arrivée"]))
