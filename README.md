@@ -86,3 +86,10 @@ Il permet de :
 - Publier l'image sur Docker Hub si les tests passent.
 
 Les identifiants Docker Hub sont stockés dans les GitHub Secrets (`DOCKERHUB_USERNAME` et `DOCKERHUB_TOKEN`).
+
+
+## Explication des scores
+
+**score_4** : il mesure le coût moyen des retards et des annulations, en minutes par train prévu. Il tient compte des minutes de retard et attribue aussi un coût aux trains annulés, estimé selon la fréquence théorique des trains et la durée du trajet. Il permet de comparer l’impact concret des perturbations entre les liaisons : plus le score est bas, mieux c’est.
+
+**score_5** : il donne une note sur 100 en situant chaque liaison par rapport aux autres liaisons du réseau. Il prend en compte le taux d’annulation et le retard moyen, avec une importance plus forte accordée aux retards (70 %) qu’aux annulations (30 %). Plus la note est élevée, meilleure est la liaison par rapport au réseau. Cette note est donc relative : elle peut varier si les performances des autres liaisons changent.
