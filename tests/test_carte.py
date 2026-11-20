@@ -10,14 +10,14 @@ VERT, ROUGE = ECHELLE[0].tolist(), ECHELLE[-1].tolist()
 
 def test_couleurs_du_vert_au_rouge() -> None:
     resultat = couleurs(pd.Series([0, 5, 10]), bas=0, haut=10)
-    assert resultat[0][:3] == VERT
-    assert resultat[2][:3] == ROUGE
+    assert resultat[0][:3] == ROUGE
+    assert resultat[2][:3] == VERT
 
 
 def test_couleurs_hors_bornes_ramenees_aux_extremites() -> None:
     resultat = couleurs(pd.Series([-50, 500]), bas=0, haut=10)
-    assert resultat[0][:3] == VERT
-    assert resultat[1][:3] == ROUGE
+    assert resultat[0][:3] == ROUGE
+    assert resultat[1][:3] == VERT
 
 
 def test_bornes_ignorent_une_valeur_extreme() -> None:
