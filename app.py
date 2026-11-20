@@ -112,8 +112,7 @@ def calculer_liaisons_scorees(
 
 st.set_page_config(page_title="Carte des TGV", page_icon="🚄", layout="wide")
 st.title(
-    "Peut-on construire un score de fiabilité par liaison, combinant taux "
-    "d’annulation et retard moyen, et le représenter sur une carte du réseau ?"
+    "Affichage de différents scores de fiabilité par liason sur une carte réseau"
 )
 
 df_clean = charger_donnees_propres()
@@ -136,11 +135,11 @@ with st.sidebar:
         options=["score_1", "score_2", "score_3", "score_4", "score_5"],
         index=2,
         format_func=lambda s: {
-            "score_1": "Score 1 – Taux de réussite",
-            "score_2": "Score 2 – Gravité des retards",
-            "score_3": "Score 3 – Relatif au temps de trajet",
-            "score_4": "Score 4 – Minutes de perturbation",
-            "score_5": "Score 5 – Note relative au P90 réseau",
+            "score_1": "Score 1 –Taux de réussite, retard < 15 min",
+            "score_2": "Score 2 –Pondération par gravité des retards",
+            "score_3": "Score 3 –Efficacité relative au temps de trajet",
+            "score_4": "Score 4 –Minutes de perturbation",
+            "score_5": "Score 5 –Note relative au P90 réseau",
         }[s],
     )
     afficher_reseau = st.checkbox("Afficher le réseau ferré", value=True)
@@ -159,9 +158,9 @@ liaisons["itineraire"] = [
 ]
 
 noms_indicateurs = {
-    "score_1": "Score de fiabilité – Taux de réussite (/100)",
-    "score_2": "Score de fiabilité – Gravité des retards (/100)",
-    "score_3": "Score de fiabilité – Relatif au temps de trajet (/100)",
+    "score_1": "Score de fiabilité – Taux de réussite, retard < 15 min (/100)",
+    "score_2": "Score de fiabilité – Pondération par gravité des retards (/100)",
+    "score_3": "Score de fiabilité – Efficacité relative au temps de trajet (/100)",
     "score_4": "Perturbation moyenne par train prévu (min)",
     "score_5": "Score de fiabilité – Relatif au P90 réseau sur la période (/100)",
 }
