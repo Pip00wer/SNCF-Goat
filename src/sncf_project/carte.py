@@ -79,8 +79,8 @@ def creer_carte(
         largeur=2 + 6 * np.sqrt(liaisons["prevus"] / liaisons["prevus"].max()),
         titre=liaisons["gare_a"] + " ↔ " + liaisons["gare_b"],
         detail=[
-            f"{nom_indicateur} : {v:.1f}\n{int(p)} circulations prévues"
-            for v, p in zip(liaisons["valeur"], liaisons["prevus"])
+            f"Rang : {r}\n{nom_indicateur} : {v:.1f}\n{int(p)} circulations prévues"
+            for r, v, p in zip(liaisons["rang"], liaisons["valeur"], liaisons["prevus"])
         ],
     )
     # Les liaisons partagent souvent les mêmes voies :
