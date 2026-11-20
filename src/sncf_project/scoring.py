@@ -1,7 +1,5 @@
-import pandas as pd 
-import numpy as np 
-
-
+import pandas as pd
+import numpy as np
 
 """
 Fichier de scoring pour le projet SNCF.
@@ -15,40 +13,47 @@ Les scores sont des notes entre 0 et 100, sauf score_4, exprimé en minutes.
 
 
 # Calcul du score 1 : proportion de trajets effectués sans retard supérieur à 15 minutes.
-def score_1 (df) : 
+def score_1(df):
 
-    df["score_1"] =((df["nb_trajets"] - df["nb_>15min"]) / df["nb_prevues"]*100).round(3)
-    
+    df["score_1"] = (
+        (df["nb_trajets"] - df["nb_>15min"]) / df["nb_prevues"] * 100
+    ).round(3)
+
     return df
 
 
 # Calcul du score 2 : pondération des retards selon leur gravité et des annulations.
-def score_2 (df,poids_gravité) :
+def score_2(df, poids_gravité):
     df["nb_15-30"] = df["nb_>15min"] - df["nb_>30min"]
-    df["nb_30-60"] = df["nb_>30min"] - df["nb_>60min"] 
+    df["nb_30-60"] = df["nb_>30min"] - df["nb_>60min"]
 
-   
-    df["score_2"] = ((
-        1 - ( 
-            df["nb_15-30"] * poids_gravité["15_30"] +
-            df["nb_30-60"] * poids_gravité["30_60"] +
-            df["nb_>60min"] * poids_gravité["60"] +
-            df["nb_annules"] * poids_gravité["annules"]
-        )/df["nb_prevues"]
-    )*100).round(3)
+    df["score_2"] = (
+        (
+            1
+            - (
+                df["nb_15-30"] * poids_gravité["15_30"]
+                + df["nb_30-60"] * poids_gravité["30_60"]
+                + df["nb_>60min"] * poids_gravité["60"]
+                + df["nb_annules"] * poids_gravité["annules"]
+            )
+            / df["nb_prevues"]
+        )
+        * 100
+    ).round(3)
 
     return df
 
 
 # Calcul du score 3 : Retard moyen relatif au temps de trajet moyen et annulation des trajets
-def score_3 ( df ):
+def score_3(df):
 
-    df["score_3"] = 100*(
-        (1 - (df["nb_annules"] / df["nb_prevues"]))*
-        (1-(df["retard_moy_all"] / df["moy_durée"]))
+    df["score_3"] = 100 * (
+        (1 - (df["nb_annules"] / df["nb_prevues"]))
+        * (1 - (df["retard_moy_all"] / df["moy_durée"]))
     ).round(3)
 
     return df
+
 
 # Calcul du score 4 : coût moyen des retards et annulations, en minutes par train prévu.
 def score_4(df: pd.DataFrame, debut: pd.Timestamp, fin: pd.Timestamp) -> pd.DataFrame:
@@ -85,10 +90,16 @@ def _penalite_relative(valeur: pd.Series, seuil: pd.Series) -> pd.Series:
 def _indicateurs_reseau(df: pd.DataFrame) -> pd.DataFrame:
     """Utilise les moyennes existantes, pondérées par aggregate_by_ligne."""
     valides = df["nb_prevues"].gt(0) & df["nb_annules"].between(0, df["nb_prevues"])
-    return pd.DataFrame({
-        "annulation_pct": (100 * df["nb_annules"] / df["nb_prevues"]).where(valides),
-        "retard_arrive_min": df["retard_moy_all"].where(valides & df["nb_trajets"].gt(0)),
-    })
+    return pd.DataFrame(
+        {
+            "annulation_pct": (100 * df["nb_annules"] / df["nb_prevues"]).where(
+                valides
+            ),
+            "retard_arrive_min": df["retard_moy_all"].where(
+                valides & df["nb_trajets"].gt(0)
+            ),
+        }
+    )
 
 
 # Calcul du score 5 : comparaison des moyennes de la période au P90 du réseau.
@@ -98,21 +109,24 @@ def score_5(df: pd.DataFrame) -> pd.DataFrame:
     # Chaque liaison fusionnée pèse autant dans le P90, quel que soit son trafic.
     p90 = indicateurs.quantile(0.90)
     annulation = _penalite_relative(
-        indicateurs["annulation_pct"], pd.Series(p90["annulation_pct"], index=df.index),
+        indicateurs["annulation_pct"],
+        pd.Series(p90["annulation_pct"], index=df.index),
     )
     retard = _penalite_relative(
-        indicateurs["retard_arrive_min"], pd.Series(p90["retard_arrive_min"], index=df.index),
+        indicateurs["retard_arrive_min"],
+        pd.Series(p90["retard_arrive_min"], index=df.index),
     )
     # Note relative au réseau : 30 % annulations, 70 % retards ; une note haute est favorable.
-    df["score_5"] = (100 * (1 - 0.3 * annulation - 0.7 * retard)).clip(lower=0, upper=100)
+    df["score_5"] = (100 * (1 - 0.3 * annulation - 0.7 * retard)).clip(
+        lower=0, upper=100
+    )
     return df
 
 
-def all_scores_and_sort ( df, poids_gravité, sort_by="score_1", *, debut, fin):
+def all_scores_and_sort(df, poids_gravité, sort_by="score_1", *, debut, fin):
     df = score_1(df)
     df = score_2(df, poids_gravité)
     df = score_3(df)
     df = score_4(df, debut, fin)
     df = score_5(df)
     return df.sort_values(by=sort_by, ascending=sort_by == "score_4")
-

@@ -80,6 +80,7 @@ uv run pytest
 Un workflow GitHub Actions est configuré pour s'exécuter à chaque push sur la branche `main`.
 
 Il permet de :
+
 - Installer les dépendances et exécuter les tests.
 - Construire l'image Docker.
 - Publier l'image sur Docker Hub si les tests passent.

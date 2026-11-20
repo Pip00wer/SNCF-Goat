@@ -1,4 +1,3 @@
-
 """
 Fichier d'agrégation pour le projet SNCF.
 Contient les fonctions permettant d'agréger les données par ligne et de calculer les métriques pondérées (moyennes).
@@ -56,25 +55,35 @@ def aggregate_by_ligne(
     df = set_ponderation(df)
 
     # On groupe par numero_ligne, gare_a et gare_b pour garder les noms de gares en colonnes
-    agg_df = df.groupby(["numero_ligne", "gare_a", "gare_b"], as_index=False).agg({
-        "nb_prevues": "sum",
-        "nb_annules": "sum",
-        "pond_moy_durée": "sum",
-        "pond_retard_moy_retard": "sum",
-        "pond_retard_moy_all": "sum",
-        "pond_moy_retard>15": "sum",
-        "nb_trajets": "sum",
-        "nb_retard_arr": "sum",
-        "nb_>15min": "sum",
-        "nb_>30min": "sum",
-        "nb_>60min": "sum",
-    })
+    agg_df = df.groupby(["numero_ligne", "gare_a", "gare_b"], as_index=False).agg(
+        {
+            "nb_prevues": "sum",
+            "nb_annules": "sum",
+            "pond_moy_durée": "sum",
+            "pond_retard_moy_retard": "sum",
+            "pond_retard_moy_all": "sum",
+            "pond_moy_retard>15": "sum",
+            "nb_trajets": "sum",
+            "nb_retard_arr": "sum",
+            "nb_>15min": "sum",
+            "nb_>30min": "sum",
+            "nb_>60min": "sum",
+        }
+    )
 
     # .replace(0, np.nan) évite les divisions par zéro si une ligne a 0 retard > 15min
-    agg_df["moy_durée"] = agg_df["pond_moy_durée"] / agg_df["nb_trajets"].replace(0, np.nan)
-    agg_df["moy_retard"] = agg_df["pond_retard_moy_retard"] / agg_df["nb_retard_arr"].replace(0, np.nan)
-    agg_df["retard_moy_all"] = agg_df["pond_retard_moy_all"] / agg_df["nb_trajets"].replace(0, np.nan)
-    agg_df["moy_retard>15"] = agg_df["pond_moy_retard>15"] / agg_df["nb_>15min"].replace(0, np.nan)
+    agg_df["moy_durée"] = agg_df["pond_moy_durée"] / agg_df["nb_trajets"].replace(
+        0, np.nan
+    )
+    agg_df["moy_retard"] = agg_df["pond_retard_moy_retard"] / agg_df[
+        "nb_retard_arr"
+    ].replace(0, np.nan)
+    agg_df["retard_moy_all"] = agg_df["pond_retard_moy_all"] / agg_df[
+        "nb_trajets"
+    ].replace(0, np.nan)
+    agg_df["moy_retard>15"] = agg_df["pond_moy_retard>15"] / agg_df[
+        "nb_>15min"
+    ].replace(0, np.nan)
 
     pond_to_drop = [
         "pond_moy_durée",
