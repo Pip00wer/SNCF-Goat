@@ -11,7 +11,7 @@ def test_application_demarre_et_affiche_les_filtres() -> None:
     assert not app.exception
     assert len(app.selectbox) == 1
     assert len(app.multiselect) == 1
-    assert app.title[0].value.startswith("Peut-on construire un score")
+    assert app.title[0].value.startswith("Affichage de différents")
 
 
 def test_selection_du_score_met_a_jour_l_indicateur() -> None:
